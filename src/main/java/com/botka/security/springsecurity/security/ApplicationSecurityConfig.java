@@ -1,22 +1,19 @@
 package com.botka.security.springsecurity.security;
 
+import com.botka.security.springsecurity.auth.ApplicationUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.botka.security.springsecurity.security.UserRoles.*;
 
 @Configuration
 @EnableWebSecurity
@@ -25,6 +22,9 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApplicationUserService applicationUserService;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -58,25 +58,15 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails anna = User.builder()
-                .username("anna")
-                .password(passwordEncoder.encode("test"))
-//                .roles(UserRoles.ADMIN.name())
-                .authorities(ADMIN.getGrantedAuthorities())
-                .build();
-
-        UserDetails linda = User.builder()
-                .username("linda")
-                .password(passwordEncoder.encode("test"))
-//                .roles(UserRoles.STUDENT.name())
-                .authorities(STUDENT.getGrantedAuthorities())
-                .build();
-
-        return new InMemoryUserDetailsManager(anna, linda);
+    protected void configure(AuthenticationManagerBuilder auth) {
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
 
-
-
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(applicationUserService);
+        return provider;
+    }
 }
