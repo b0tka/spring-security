@@ -1,9 +1,5 @@
 package com.botka.security.springsecurity.security;
 
-import org.springframework.security.core.GrantedAuthority;
-
-import java.util.Set;
-
 public enum UserPermissions {
     STUDENT_READ("student:read"),
     STUDENT_WRITE("student:write"),
